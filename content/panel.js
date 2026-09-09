@@ -82,18 +82,18 @@ const FillPanel = (() => {
     target.focus({ preventScroll: true });
   }
 
+  const SCOPE_NAMES = { education: '教育经历', projects: '项目经历', internships: '实习经历' };
+
   function recordHints(matched, profile) {
     const hints = [];
-    const groupsOf = (scope) =>
-      matched.filter((m) => m.def.scope === scope)
+    for (const [scope, name] of Object.entries(SCOPE_NAMES)) {
+      const groups = matched
+        .filter((m) => m.def.scope === scope)
         .reduce((max, m) => Math.max(max, m.occurrence + 1), 0);
-    const eduGroups = groupsOf('education');
-    if (profile.education.length > 1 && eduGroups > 0 && profile.education.length > eduGroups) {
-      hints.push(`教育经历共 ${profile.education.length} 条，页面识别到 ${eduGroups} 组；如需填充更多，请先在页面上点击「添加」再重新扫描。`);
-    }
-    const projGroups = groupsOf('projects');
-    if (profile.projects.length > 1 && projGroups > 0 && profile.projects.length > projGroups) {
-      hints.push(`项目经历共 ${profile.projects.length} 条，页面识别到 ${projGroups} 组；如需填充更多，请先在页面上点击「添加」再重新扫描。`);
+      const total = (profile[scope] || []).length;
+      if (total > 1 && groups > 0 && total > groups) {
+        hints.push(`${name}共 ${total} 条，页面识别到 ${groups} 组；如需填充更多，请先在页面上点击「添加」再重新扫描。`);
+      }
     }
     return hints;
   }

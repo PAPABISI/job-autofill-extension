@@ -8,6 +8,7 @@ const BASIC_FIELDS = [
   { prop: 'email', label: '电子邮箱' },
   { prop: 'idCard', label: '证件号码' },
   { prop: 'politicalStatus', label: '政治面貌', type: 'select', options: ['群众', '共青团员', '中共预备党员', '中共党员', '其他'] },
+  { prop: 'highestDegree', label: '最高学历', type: 'select', options: ['高中', '大专', '本科', '硕士', '博士', '其他'] },
   { prop: 'englishLevel', label: '英语水平', placeholder: '如 CET-6' },
   { prop: 'nativePlace', label: '籍贯/生源地' },
   { prop: 'currentCity', label: '现居城市' },
@@ -34,6 +35,14 @@ const PROJECT_FIELDS = [
   { prop: 'start', label: '开始时间 *', placeholder: 'YYYY-MM' },
   { prop: 'end', label: '结束时间 *', placeholder: 'YYYY-MM' },
   { prop: 'description', label: '项目描述', type: 'textarea' }
+];
+
+const INTERN_FIELDS = [
+  { prop: 'company', label: '实习公司' },
+  { prop: 'position', label: '实习岗位' },
+  { prop: 'start', label: '开始时间 *', placeholder: 'YYYY-MM' },
+  { prop: 'end', label: '结束时间 *', placeholder: 'YYYY-MM' },
+  { prop: 'description', label: '实习内容', type: 'textarea' }
 ];
 
 let profile = null;
@@ -139,6 +148,7 @@ function renderAll() {
   renderBasic();
   renderRecordList('education-list', EDU_FIELDS, profile.education, '教育经历');
   renderRecordList('project-list', PROJECT_FIELDS, profile.projects, '项目经历');
+  renderRecordList('internship-list', INTERN_FIELDS, profile.internships, '实习经历');
   document.getElementById('extra-skills').value = profile.extra.skills || '';
   document.getElementById('extra-awards').value = profile.extra.awards || '';
   document.getElementById('extra-selfEval').value = profile.extra.selfEval || '';
@@ -169,6 +179,7 @@ function collectProfile() {
     basic: collectBasic(),
     education: collectRecords('education-list'),
     projects: collectRecords('project-list'),
+    internships: collectRecords('internship-list'),
     extra: {
       skills: document.getElementById('extra-skills').value.trim(),
       awards: document.getElementById('extra-awards').value.trim(),
@@ -199,6 +210,7 @@ function importJson(file) {
       if (data.extra && typeof data.extra === 'object') Object.assign(fresh.extra, data.extra);
       if (Array.isArray(data.education)) fresh.education = data.education;
       if (Array.isArray(data.projects)) fresh.projects = data.projects;
+      if (Array.isArray(data.internships)) fresh.internships = data.internships;
       profile = fresh;
       renderAll();
       await ProfileStorage.save(profile);
@@ -227,6 +239,11 @@ async function init() {
   document.getElementById('btn-add-project').addEventListener('click', () => {
     profile = collectProfile();
     profile.projects.push({ name: '', role: '', start: '', end: '', description: '' });
+    renderAll();
+  });
+  document.getElementById('btn-add-intern').addEventListener('click', () => {
+    profile = collectProfile();
+    profile.internships.push({ company: '', position: '', start: '', end: '', description: '' });
     renderAll();
   });
   document.getElementById('btn-export').addEventListener('click', exportJson);

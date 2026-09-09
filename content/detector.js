@@ -171,7 +171,8 @@ const FormDetector = (() => {
       const def = matchField(entry.ctx, entry.element);
       if (def) {
         let occurrence = 0;
-        if (def.scope === 'education' || def.scope === 'projects') {
+        // 数组型分区（education / projects / internships）按 DOM 顺序分配记录序号
+        if (Array.isArray(profile[def.scope])) {
           occurrence = occurrenceCounters[def.key] || 0;
           occurrenceCounters[def.key] = occurrence + 1;
         }
