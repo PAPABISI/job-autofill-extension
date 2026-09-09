@@ -1,0 +1,107 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: #f3f5f9;
+  color: #1f2430;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: #fff;
+  border-bottom: 1px solid #e4e8f0;
+}
+
+.topbar h1 { font-size: 18px; margin: 0; }
+
+.actions { display: flex; gap: 10px; }
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid #cdd5e1;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn:hover { border-color: #4a7dff; color: #4a7dff; }
+.btn-primary { background: #4a7dff; border-color: #4a7dff; color: #fff; }
+.btn-primary:hover { background: #3566e8; color: #fff; }
+.btn-small { padding: 5px 12px; font-size: 13px; }
+.btn-danger:hover { border-color: #e05656; color: #e05656; }
+
+.container { max-width: 880px; margin: 24px auto 80px; padding: 0 20px; }
+
+.tip { font-size: 13px; color: #8a93a6; margin: 0 0 16px; }
+
+.card {
+  background: #fff;
+  border: 1px solid #e4e8f0;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+.card h2 { font-size: 16px; margin: 0 0 16px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-head h2 { margin: 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 18px;
+}
+
+.stack { display: flex; flex-direction: column; gap: 14px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 13px; color: #5a6372; }
+
+.field input, .field select, .field textarea {
+  padding: 8px 10px;
+  border: 1px solid #cdd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: #4a7dff;
+  box-shadow: 0 0 0 2px rgba(74, 125, 255, 0.15);
+}
+
+.record-card {
+  border: 1px solid #e4e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #fafbfd;
+}
+.record-card .record-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.record-title { font-size: 14px; font-weight: 600; color: #4a5568; }
+
+.empty-hint { font-size: 13px; color: #a0a8b8; padding: 8px 0; }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  background: #1f2430;
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 14px;
+  z-index: 100;
+}

@@ -1,0 +1,56 @@
+* { box-sizing: border-box; }
+
+body {
+  width: 260px;
+  margin: 0;
+  padding: 14px 16px 16px;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #1f2430;
+}
+
+.header { margin-bottom: 10px; }
+.logo { font-size: 16px; font-weight: 600; }
+
+.profile-summary {
+  font-size: 12px;
+  color: #5a6372;
+  background: #f3f5f9;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 9px 0;
+  border: none;
+  border-radius: 6px;
+  background: #4a7dff;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.btn-primary:hover { background: #3566e8; }
+.btn-primary:disabled { background: #a9bcf5; cursor: not-allowed; }
+
+.btn-plain {
+  width: 100%;
+  padding: 7px 0;
+  border: 1px solid #cdd5e1;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-plain:hover { border-color: #4a7dff; color: #4a7dff; }
+
+.status {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #8a93a6;
+  min-height: 16px;
+  line-height: 1.5;
+}
+.status.error { color: #d64545; }

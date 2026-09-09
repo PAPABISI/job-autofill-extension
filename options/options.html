@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网申助手 · 资料管理</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>网申助手 · 资料管理</h1>
+    <div class="actions">
+      <button id="btn-import" class="btn">导入 JSON</button>
+      <button id="btn-export" class="btn">导出 JSON</button>
+      <button id="btn-save" class="btn btn-primary">保存资料</button>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="tip">所有资料仅保存在本机浏览器中，不会上传到任何服务器。带 * 的日期建议格式为 YYYY-MM 或 YYYY-MM-DD。</p>
+
+    <section class="card">
+      <h2>基本信息</h2>
+      <div class="grid" id="basic-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>教育经历</h2>
+        <button class="btn btn-small" id="btn-add-edu">+ 添加教育经历</button>
+      </div>
+      <div id="education-list"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>项目经历</h2>
+        <button class="btn btn-small" id="btn-add-project">+ 添加项目经历</button>
+      </div>
+      <div id="project-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>补充信息</h2>
+      <div class="stack">
+        <label class="field">
+          <span class="field-label">技能特长</span>
+          <textarea id="extra-skills" rows="3" placeholder="如：熟悉 Python / JavaScript，掌握 Selenium 自动化测试..."></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">获奖情况</span>
+          <textarea id="extra-awards" rows="3" placeholder="如：2024 年校级一等奖学金..."></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">自我评价</span>
+          <textarea id="extra-selfEval" rows="4" placeholder="简要介绍自己的优势与特点"></textarea>
+        </label>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="../lib/storage.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

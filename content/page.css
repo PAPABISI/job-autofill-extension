@@ -1,0 +1,11 @@
+/* 注入页面的高亮样式（作用于被填充的表单控件，不进入 Shadow DOM） */
+
+.jaf-filled {
+  outline: 2px solid #34a853 !important;
+  outline-offset: 1px;
+}
+
+.jaf-failed {
+  outline: 2px solid #f9ab00 !important;
+  outline-offset: 1px;
+}
