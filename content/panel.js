@@ -217,7 +217,7 @@ const FillPanel = (() => {
     result.style.display = 'none';
     panel.appendChild(result);
 
-    confirmBtn.addEventListener('click', () => {
+    confirmBtn.addEventListener('click', async () => {
       const tasks = [];
       for (const r of matchedRows) {
         if (r.checkbox.checked) {
@@ -241,7 +241,7 @@ const FillPanel = (() => {
       }
       let ok = 0, fail = 0, skip = 0;
       for (const t of tasks) {
-        const r = FormFiller.fill(t);
+        const r = await FormFiller.fill(t);
         if (r.skipped) skip++;
         else if (r.ok) ok++;
         else fail++;

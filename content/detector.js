@@ -2,12 +2,23 @@
  * 表单字段启发式识别引擎。
  * 扫描页面中的表单控件，结合 label 文本、元素属性、邻近文本与关键词表做加权匹配，
  * 输出 matched（识别成功，含取值）与 unmatched（未识别，供人工指定）两组结果。
+ * 支持：原生 input/textarea/select、原生 radio 组，以及组件库自定义下拉（combobox）。
  * 依赖：lib/fields.js（FIELD_DEFS / resolveFieldValue）
  */
 const FormDetector = (() => {
   const SKIP_TYPES = new Set(['hidden', 'submit', 'button', 'image', 'reset', 'file', 'password', 'checkbox']);
   const BLOCK_TEXT_RE = /登录|登陆|注册|密码|验证码|账号|搜索/;
   const BLOCK_ATTR_RE = /login|sign[\s_-]?in|sign[\s_-]?up|account|passwd|password|captcha|verify|search/i;
+
+  // 自定义下拉触发器：标准 WAI-ARIA combobox + 常见组件库容器
+  const CUSTOM_SELECT_SELECTOR = [
+    '[role="combobox"]',
+    '[aria-haspopup="listbox"]',
+    '.atsx-select-selection',
+    '.el-select',
+    '.ant-select-selector',
+    '[class*="select-selection"]'
+  ].join(',');
 
   function isVisible(el) {
     const rect = el.getBoundingClientRect();
@@ -16,25 +27,49 @@ const FormDetector = (() => {
     return style.visibility !== 'hidden' && style.display !== 'none';
   }
 
+  // 原生 radio 常被 CSS 隐藏（opacity:0 / 绝对定位），但其 label/包装是可见的
+  function radioUsable(el) {
+    if (isVisible(el)) return true;
+    const wrap = el.closest('label') || el.closest('[class*="radio"]') || el.parentElement;
+    return !!wrap && isVisible(wrap);
+  }
+
   function collectControls() {
     const singles = [];
     const radioGroups = new Map();
+    const customSelects = [];
+
+    const pushRadio = (el) => {
+      // 无 name 的受控 radio（如 atsx），按最近的分组容器聚合
+      const groupEl = el.closest('[role="radiogroup"], [class*="radio-group"], fieldset');
+      const key = el.name ? ('name:' + el.name) : (groupEl || el.parentElement);
+      if (!radioGroups.has(key)) radioGroups.set(key, []);
+      radioGroups.get(key).push(el);
+    };
+
     for (const el of document.querySelectorAll('input, textarea, select')) {
       const tag = el.tagName.toLowerCase();
       const type = (el.getAttribute('type') || 'text').toLowerCase();
       if (tag === 'input' && SKIP_TYPES.has(type)) continue;
       if (type === 'search') continue;
       if (el.disabled || el.readOnly) continue;
-      if (!isVisible(el)) continue;
       if (tag === 'input' && type === 'radio') {
-        if (!el.name) continue;
-        if (!radioGroups.has(el.name)) radioGroups.set(el.name, []);
-        radioGroups.get(el.name).push(el);
+        if (!radioUsable(el)) continue;
+        pushRadio(el);
         continue;
       }
+      if (!isVisible(el)) continue;
       singles.push(el);
     }
-    return { singles, radioGroups };
+
+    for (const el of document.querySelectorAll(CUSTOM_SELECT_SELECTOR)) {
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') continue;
+      if (el.disabled) continue;
+      if (!isVisible(el)) continue;
+      customSelects.push(el);
+    }
+
+    return { singles, radioGroups, customSelects };
   }
 
   function labelTextOf(el) {
@@ -87,7 +122,7 @@ const FormDetector = (() => {
   function extractContext(el) {
     const attr = [el.name, el.id, el.placeholder, el.getAttribute('aria-label'),
                   el.getAttribute('autocomplete'), el.getAttribute('data-field'),
-                  el.getAttribute('data-name')]
+                  el.getAttribute('data-name'), el.getAttribute('data-cy')]
       .filter(Boolean).join(' ');
     return { label: labelTextOf(el), attr, nearby: nearbyText(el) };
   }
@@ -115,7 +150,6 @@ const FormDetector = (() => {
         for (let i = 0; i < def.keywords.length; i++) {
           const kw = def.keywords[i].toLowerCase();
           if (kw && t.includes(kw)) {
-            // 来源权重为主，关键词越靠前、越长得分越高
             const kwScore = s.weight * 100 + (def.keywords.length - i) * 2 + kw.length;
             if (kwScore > score) score = kwScore;
           }
@@ -136,14 +170,41 @@ const FormDetector = (() => {
     return 'text';
   }
 
+  function captionOf(node) {
+    if (!node) return '';
+    const t = (node.innerText || '').trim();
+    return (t && t.length <= 24 && !t.includes('\n')) ? t : '';
+  }
+
   function radioContext(radios) {
     const first = radios[0];
     let ctx = extractContext(first);
-    const fieldset = first.closest('fieldset');
-    if (!ctx.label && fieldset) {
-      const legend = fieldset.querySelector('legend');
-      if (legend) ctx = { ...ctx, label: (legend.innerText || '').trim() };
+    const groupEl = first.closest('[role="radiogroup"], [class*="radio-group"]') || first.closest('fieldset');
+
+    if (groupEl) {
+      if (groupEl.tagName === 'FIELDSET') {
+        const legend = groupEl.querySelector(':scope > legend');
+        const c = captionOf(legend);
+        if (c) return { ...ctx, label: c };
+      }
+      // 表单行（form-item）里位于分组上方的标签
+      const item = groupEl.closest('[class*="form-item"], [class*="formItem"], [class*="form_item"], li, tr, td');
+      if (item && item !== groupEl) {
+        for (const child of item.children) {
+          if (child === groupEl || (child.contains && child.contains(groupEl))) continue;
+          const c = captionOf(child);
+          if (c) return { ...ctx, label: c };
+        }
+      }
+      // 分组前相邻的标签节点（如 <label>性别</label>）
+      let prev = groupEl.previousElementSibling;
+      for (let h = 0; prev && h < 3; h++) {
+        const c = captionOf(prev);
+        if (c) return { ...ctx, label: c };
+        prev = prev.previousElementSibling;
+      }
     }
+
     if (!ctx.label && !ctx.nearby) {
       const container = first.closest('div, li, td, tr');
       if (container) {
@@ -162,7 +223,7 @@ const FormDetector = (() => {
    *   unmatched 项: { element, elements?, kind, ctxLabel }
    */
   function scan(profile) {
-    const { singles, radioGroups } = collectControls();
+    const { singles, radioGroups, customSelects } = collectControls();
     const matched = [];
     const unmatched = [];
     const occurrenceCounters = {};
@@ -171,7 +232,6 @@ const FormDetector = (() => {
       const def = matchField(entry.ctx, entry.element);
       if (def) {
         let occurrence = 0;
-        // 数组型分区（education / projects / internships）按 DOM 顺序分配记录序号
         if (Array.isArray(profile[def.scope])) {
           occurrence = occurrenceCounters[def.key] || 0;
           occurrenceCounters[def.key] = occurrence + 1;
@@ -200,14 +260,21 @@ const FormDetector = (() => {
       const ctxLabel = ctx.label || ctx.nearby || el.placeholder || el.name || el.id || '(无标签)';
       pushItem({ element: el, ctx, kind: controlKind(el), ctxLabel });
     }
-    for (const [name, radios] of radioGroups) {
+    for (const el of customSelects) {
+      const ctx = extractContext(el);
+      const ctxLabel = ctx.label || ctx.nearby || el.getAttribute('data-cy') ||
+        el.getAttribute('aria-label') || '(无标签)';
+      pushItem({ element: el, ctx, kind: 'select', ctxLabel });
+    }
+    for (const [key, radios] of radioGroups) {
       const ctx = radioContext(radios);
+      const nameKey = typeof key === 'string' ? key.slice(5) : '';
       pushItem({
         element: radios[0],
         elements: radios,
         ctx,
         kind: 'radio-group',
-        ctxLabel: ctx.label || ctx.nearby || name
+        ctxLabel: ctx.label || ctx.nearby || nameKey || '(无标签)'
       });
     }
 
